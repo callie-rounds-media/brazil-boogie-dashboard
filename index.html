@@ -94,6 +94,7 @@ tr:last-child td{border-bottom:0}
       <button class="tab" role="tab" data-go="houses" aria-selected="false">Houses and rooms</button>
       <button class="tab" role="tab" data-go="guests" aria-selected="false">Guests</button>
       <button class="tab" role="tab" data-go="expenses" aria-selected="false">Expenses sheet</button>
+      <button class="tab" role="tab" data-go="extras" aria-selected="false">Possible extras</button>
       <button class="tab" role="tab" data-go="open" aria-selected="false">Open items</button>
     </nav>
   </div>
@@ -106,6 +107,7 @@ tr:last-child td{border-bottom:0}
       <button class="card" data-go="houses"><h3>Houses and rooms</h3></button>
       <button class="card" data-go="guests"><h3>Guests</h3></button>
       <button class="card" data-go="expenses"><h3>Expenses sheet</h3></button>
+      <button class="card" data-go="extras"><h3>Possible extras</h3></button>
       <button class="card" data-go="open"><h3>Open items</h3></button>
     </div>
   </section>
@@ -113,12 +115,13 @@ tr:last-child td{border-bottom:0}
   <section class="view" id="houses"><h2 class="section">Houses and rooms</h2><div id="housesBody" class="loading">Loading</div></section>
   <section class="view" id="guests"><h2 class="section">Guests</h2><div id="guestsBody" class="loading">Loading</div></section>
   <section class="view" id="expenses"><h2 class="section">Expenses sheet</h2><div id="expensesBody" class="loading">Loading</div></section>
+  <section class="view" id="extras"><h2 class="section">Possible extras</h2><div id="extrasBody" class="loading">Loading</div></section>
   <section class="view" id="open"><h2 class="section">Open items</h2><div id="openBody" class="loading">Loading</div></section>
 </main>
 
 <script>
 var SHEET = '124qYeXChXvuWnJJfFZMZBFme2DhNZQAgZ9DjD6Eal28';
-var TABS = { rooms: 'Rooms', guests: 'Guests', expenses: 'Expenses sheet', open: 'Open items' };
+var TABS = { rooms: 'Rooms', guests: 'Guests', expenses: 'Expenses sheet', extras: 'Possible extras', open: 'Open items' };
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
   return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
@@ -212,6 +215,15 @@ function renderExpenses(costs){
   return table(['What', 'Amount', 'Paid by', 'Status', 'Notes'], rows);
 }
 
+function renderExtras(extras){
+  var rows = extras.map(function(x){
+    var amt = x.amount ? esc(x.amount) : '<span class="gap">no price yet</span>';
+    return '<tr><td>' + esc(x.what) + '</td><td>' + amt + '</td><td>' + esc(x.status) +
+           '</td><td>' + esc(x.notes) + '</td></tr>';
+  }).join('');
+  return table(['What', 'Amount', 'Status', 'Notes'], rows);
+}
+
 function renderOpen(items){
   return '<ul class="todo">' + items.filter(function(i){ return (i.status || 'open') !== 'done'; })
     .map(function(i){ return '<li>' + esc(i.item) + '</li>'; }).join('') + '</ul>';
@@ -219,17 +231,19 @@ function renderOpen(items){
 
 function fail(el){ el.className = 'err'; el.textContent = 'Could not reach the sheet. Refresh in a moment.'; }
 
-Promise.all([load('rooms'), load('guests'), load('expenses'), load('open')]).then(function(d){
+Promise.all([load('rooms'), load('guests'), load('expenses'), load('extras'), load('open')]).then(function(d){
   document.getElementById('housesBody').className = '';
   document.getElementById('housesBody').innerHTML = renderHouses(d[0], d[1]);
   document.getElementById('guestsBody').className = '';
   document.getElementById('guestsBody').innerHTML = renderGuests(d[1]);
   document.getElementById('expensesBody').className = '';
   document.getElementById('expensesBody').innerHTML = renderExpenses(d[2]);
+  document.getElementById('extrasBody').className = '';
+  document.getElementById('extrasBody').innerHTML = renderExtras(d[3]);
   document.getElementById('openBody').className = '';
-  document.getElementById('openBody').innerHTML = renderOpen(d[3]);
+  document.getElementById('openBody').innerHTML = renderOpen(d[4]);
 }).catch(function(){
-  ['housesBody', 'guestsBody', 'expensesBody', 'openBody'].forEach(function(id){
+  ['housesBody', 'guestsBody', 'expensesBody', 'extrasBody', 'openBody'].forEach(function(id){
     fail(document.getElementById(id)); });
 });
 
