@@ -233,16 +233,25 @@ Promise.all([load('rooms'), load('guests'), load('expenses'), load('open')]).the
     fail(document.getElementById(id)); });
 });
 
+function show(id){
+  if (!document.getElementById(id)) id = 'home';
+  document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('is-on', v.id === id); });
+  document.querySelectorAll('.tab').forEach(function (t) {
+    t.setAttribute('aria-selected', String(t.getAttribute('data-go') === id)); });
+}
+
 document.addEventListener('click', function (ev) {
   var el = ev.target.closest('[data-go]');
   if (!el) return;
   ev.preventDefault();
   var id = el.getAttribute('data-go');
-  document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('is-on', v.id === id); });
-  document.querySelectorAll('.tab').forEach(function (t) {
-    t.setAttribute('aria-selected', String(t.getAttribute('data-go') === id)); });
+  show(id);
+  history.replaceState(null, '', id === 'home' ? location.pathname : '#' + id);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
+
+show((location.hash || '#home').slice(1));
+window.addEventListener('hashchange', function(){ show((location.hash || '#home').slice(1)); });
 </script>
 </body>
 </html>
